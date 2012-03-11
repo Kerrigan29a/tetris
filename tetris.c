@@ -1,7 +1,8 @@
 /* Micro Tetris, based on an obfuscated tetris, 1989 IOCCC Best Game
  *
- * Copyright (c) 1989  John Tromp <john.tromp@gmail.com>
+ * Copyright (c) 1989 John Tromp <john.tromp@gmail.com>
  * Copyright (c) 2009, 2010 Joachim Nilsson <joachim.nilsson@vmlinux.org>
+ * Copyright (c) 2012 Javier Escalada Gómez <kerrigan29a@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -33,8 +34,14 @@
 #include "conio.h"
 #include "tetris.h"
 
+/* Utility macros */
+#define STR(x) _STR(x)
+#define _STR(x) # x
+
 static struct termios savemodes;
 static int havemodes = 0;
+
+#define BIAS 1
 
 #define      TL     -B_COLS-1       /* top left */
 #define      TC     -B_COLS         /* top center */
@@ -46,7 +53,26 @@ static int havemodes = 0;
 #define      BR     B_COLS+1        /* bottom right */
 
 /* These can be overridden by the user. */
-#define DEFAULT_KEYS "jkl pq"
+#ifdef __APPLE__
+    #include <TargetConditionals.h>
+    #ifdef TARGET_OS_IPHONE //iOS
+        #define DEFAULT_KEYS "a l\npq"
+        #define KEY_HELP_LEFT "a - Left"
+        #define KEY_HELP_RIGHT "l - Right"
+        #define KEY_HELP_ROTATE "space - Rotate"
+        #define KEY_HELP_DROP "enter - Drop"
+        #define KEY_HELP_PAUSE "p - Pause"
+        #define KEY_HELP_QUIT "q - Quit"
+    #endif
+#else
+    #define DEFAULT_KEYS "jkl pq"
+    #define KEY_HELP_LEFT "j - Left"
+    #define KEY_HELP_RIGHT "l - Right"
+    #define KEY_HELP_ROTATE "k - Rotate"
+    #define KEY_HELP_DROP "space - Drop"
+    #define KEY_HELP_PAUSE "p - Pause"
+    #define KEY_HELP_QUIT "q - Quit"
+#endif
 #define KEY_LEFT   0
 #define KEY_RIGHT  2
 #define KEY_ROTATE 1
@@ -123,7 +149,7 @@ int update (void)
          if (preview[y * B_COLS + x] - shadow_preview[y * B_COLS + x])
          {
             shadow_preview[y * B_COLS + x] = preview[y * B_COLS + x];
-            gotoxy (x * 2 + 26 + 28, start + y);
+            gotoxy (x * 2 + 26 + BIAS, start + y);
             printf ("\e[%dm  ", preview[y * B_COLS + x]);
          }
       }
@@ -138,7 +164,7 @@ int update (void)
          if (board[y * B_COLS + x] - shadow[y * B_COLS + x])
          {
             shadow[y * B_COLS + x] = board[y * B_COLS + x];
-            gotoxy (x * 2 + 28, y);
+            gotoxy (x * 2 + BIAS, y);
             printf ("\e[%dm  ", board[y * B_COLS + x]);
          }
       }
@@ -154,16 +180,16 @@ int update (void)
 #ifdef ENABLE_SCORE
    /* Display current level and points */
    textattr(RESETATTR);
-   gotoxy (26 + 28, 2);
+   gotoxy (26 + BIAS, 2);
    printf ("Level  : %d", level);
-   gotoxy (26 + 28, 3);
+   gotoxy (26 + BIAS, 3);
    printf ("Points : %d", points);
 #endif
 #ifdef ENABLE_PREVIEW
-   gotoxy (26 + 28, 5);
+   gotoxy (26 + BIAS, 5);
    printf ("Preview:");
 #endif
-   gotoxy (26 + 28, 10);
+   gotoxy (26 + BIAS, 10);
    printf ("Keys:");
 
    return getchar ();
@@ -231,18 +257,18 @@ void show_online_help (void)
    const int start = 11;
 
    textattr(RESETATTR);
-   gotoxy (26 + 28, start);
-   puts("j     - left");
-   gotoxy (26 + 28, start + 1);
-   puts("k     - rotate");
-   gotoxy (26 + 28, start + 2);
-   puts("l     - right");
-   gotoxy (26 + 28, start + 3);
-   puts("space - drop");
-   gotoxy (26 + 28, start + 4);
-   puts("p     - pause");
-   gotoxy (26 + 28, start + 5);
-   puts("q     - quit");
+   gotoxy (26 + BIAS, start);
+   puts(KEY_HELP_LEFT);
+   gotoxy (26 + BIAS, start + 1);
+   puts(KEY_HELP_ROTATE);
+   gotoxy (26 + BIAS, start + 2);
+   puts(KEY_HELP_RIGHT);
+   gotoxy (26 + BIAS, start + 3);
+   puts(KEY_HELP_DROP);
+   gotoxy (26 + BIAS, start + 4);
+   puts(KEY_HELP_PAUSE);
+   gotoxy (26 + BIAS, start + 5);
+   puts(KEY_HELP_QUIT);
 }
 
 /* Code stolen from http://c-faq.com/osdep/cbreak.html */

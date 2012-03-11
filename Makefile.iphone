@@ -1,0 +1,39 @@
+# Micro Tetris Makefile
+# Remember to update the VERSION before a new release.
+# -- " --  to set the DESTDIR env. variable when installing.
+#
+# Set CC and CFGLAGS in your local environment for a suitable
+# compiler (tcc?) and CFLAGS (-Os -W -Wall -Werror).
+
+VERSION = 1.2.0
+CFG_OPTS = -DENABLE_SCORE -DENABLE_PREVIEW -DENABLE_HIGH_SCORE
+TARGET = tetris
+
+SSH = root@192.168.1.36
+
+IPHONE_PLATFORM = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+
+CC = $(IPHONE_PLATFORM)/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
+CPPFLAGS += $(CFG_OPTS)
+CFLAGS = -b armv7 -isysroot $(IPHONE_PLATFORM)/Developer/SDKs/iPhoneOS5.1.sdk
+LDFLAGS = -b armv7 -isysroot $(IPHONE_PLATFORM)/Developer/SDKs/iPhoneOS5.1.sdk
+
+all: $(TARGET)
+
+tetris.o: Makefile tetris.c tetris.h
+
+clean:
+	-@$(RM) $(TARGET) $(TARGET).o *~
+
+distclean: clean
+
+install: all
+	scp $(TARGET) $(SSH):/tmp/$(TARGET)
+	ssh $(SSH) "install -D -m 0755 -o mobile -g mobile /tmp/$(TARGET) /usr/local/bin/$(TARGET) && \
+    touch /tmp/$(TARGET).scores && \
+    install -D -m 0664 -g mobile -g mobile /tmp/$(TARGET).scores /var/games/$(TARGET).scores && \
+    rm /tmp/$(TARGET).scores /tmp/$(TARGET)"
+
+dist:
+	@git archive --format=tar --prefix=tetris-$(VERSION)/ $(VERSION) | bzip2 >../tetris-$(VERSION).tar.bz2
+
