@@ -55,15 +55,16 @@ static int havemodes = 0;
 /* These can be overridden by the user. */
 #ifdef __APPLE__
     #include <TargetConditionals.h>
-    #ifdef TARGET_OS_IPHONE //iOS
-        #define DEFAULT_KEYS "a l\npq"
-        #define KEY_HELP_LEFT "a - Left"
-        #define KEY_HELP_RIGHT "l - Right"
-        #define KEY_HELP_ROTATE "space - Rotate"
-        #define KEY_HELP_DROP "enter - Drop"
-        #define KEY_HELP_PAUSE "p - Pause"
-        #define KEY_HELP_QUIT "q - Quit"
-    #endif
+#endif
+    
+#if defined __APPLE__ &&  TARGET_OS_IPHONE == 1 //iOS
+    #define DEFAULT_KEYS "a l\npq"
+    #define KEY_HELP_LEFT "a - Left"
+    #define KEY_HELP_RIGHT "l - Right"
+    #define KEY_HELP_ROTATE "space - Rotate"
+    #define KEY_HELP_DROP "enter - Drop"
+    #define KEY_HELP_PAUSE "p - Pause"
+    #define KEY_HELP_QUIT "q - Quit"
 #else
     #define DEFAULT_KEYS "jkl pq"
     #define KEY_HELP_LEFT "j - Left"
