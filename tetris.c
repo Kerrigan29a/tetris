@@ -36,14 +36,16 @@
 static struct termios savemodes;
 static int havemodes = 0;
 
-#define      TL     -B_COLS-1       /* top left */
-#define      TC     -B_COLS         /* top center */
-#define      TR     -B_COLS+1       /* top right */
-#define      ML     -1              /* middle left */
-#define      MR     1               /* middle right */
-#define      BL     B_COLS-1        /* bottom left */
-#define      BC     B_COLS          /* bottom center */
-#define      BR     B_COLS+1        /* bottom right */
+#define     TL      -B_COLS-1       /* top left */
+#define     TC      -B_COLS         /* top center */
+#define     TR      -B_COLS+1       /* top right */
+#define     ML      -1              /* middle left */
+#define     MR      1               /* middle right */
+#define     EMR     2               /* extra middle right */
+#define     BL      B_COLS-1        /* bottom left */
+#define     BC      B_COLS          /* bottom center */
+#define     BR      B_COLS+1        /* bottom right */
+#define     EBC     2 * B_COLS      /* extra bottom center */
 
 /* These can be overridden by the user. */
 #define DEFAULT_KEYS "jkl pq"
@@ -68,25 +70,26 @@ int board[B_SIZE], shadow[B_SIZE];
 int *peek_shape;                /* peek preview of next shape */
 int *shape;
 int shapes[] = {
-    7,  TL,  TC,  MR,
-    8,  TR,  TC,  ML,
-    9,  ML,  MR,  BC,
-    3,  TL,  TC,  ML,
-   12,  ML,  BL,  MR,
-   15,  ML,  BR,  MR,
-   18,  ML,  MR,   2,           /* sticks out */
-    0,  TC,  ML,  BL,
-    1,  TC,  MR,  BR,
-   10,  TC,  MR,  BC,
-   11,  TC,  ML,  MR,
-    2,  TC,  ML,  BC,
-   13,  TC,  BC,  BR,
-   14,  TR,  ML,  MR,
-    4,  TL,  TC,  BC,
-   16,  TR,  TC,  BC,
-   17,  TL,  MR,  ML,
-    5,  TC,  BC,  BL,
-    6,  TC,  BC,  2 * B_COLS,   /* sticks out */
+/* 00 */    7,  TL,  TC,  MR,   /* Z shape initial */
+/* 01 */    8,  TR,  TC,  ML,   /* S shape initial */
+/* 02 */    9,  ML,  MR,  BC,   /* T shape initial */
+/* 03 */    3,  TL,  TC,  ML,   /* O shape initial */
+/* 04 */   12,  ML,  BL,  MR,   /* L shape initial */
+/* 05 */   15,  ML,  BR,  MR,   /* J shape initial */
+/* 06 */   18,  ML,  MR,  EMR,  /* I shape initial */
+
+/* 07 */    0,  TC,  ML,  BL,   /* Z shape */
+/* 08 */    1,  TC,  MR,  BR,   /* S shape */
+/* 09 */   10,  TC,  MR,  BC,   /* T shape */
+/* 10 */   11,  TC,  ML,  MR,   /* T shape */
+/* 11 */    2,  TC,  ML,  BC,   /* T shape */
+/* 12 */   13,  TC,  BC,  BR,   /* L shape */
+/* 13 */   14,  TR,  ML,  MR,   /* L shape */
+/* 14 */    4,  TL,  TC,  BC,   /* L shape */
+/* 15 */   16,  TR,  TC,  BC,   /* J shape */
+/* 16 */   17,  TL,  MR,  ML,   /* J shape */
+/* 17 */    5,  TC,  BC,  BL,   /* J shape */
+/* 18 */    6,  TC,  BC,  EBC,  /* I shape */
 };
 
 void alarm_handler (int signal __attribute__ ((unused)))
@@ -113,10 +116,10 @@ int update (void)
 
    /* Display piece preview. */
    memset (preview, 0, sizeof(preview));
-   preview[2 * B_COLS + 1] = 7;
-   preview[2 * B_COLS + 1 + peek_shape[1]] = 7;
-   preview[2 * B_COLS + 1 + peek_shape[2]] = 7;
-   preview[2 * B_COLS + 1 + peek_shape[3]] = 7;
+   preview[2 * B_COLS + 1] = RED;
+   preview[2 * B_COLS + 1 + peek_shape[1]] = RED;
+   preview[2 * B_COLS + 1 + peek_shape[2]] = RED;
+   preview[2 * B_COLS + 1 + peek_shape[3]] = RED;
 
    for (y = 0; y < 4; y++)
    {
@@ -126,7 +129,8 @@ int update (void)
          {
             shadow_preview[y * B_COLS + x] = preview[y * B_COLS + x];
             gotoxy (x * 2 + 26 + OFFSET, start + y);
-            printf ("\e[%dm  ", preview[y * B_COLS + x]);
+            textbackground(preview[y * B_COLS + x]);
+            printf ("  ");
          }
       }
    }
@@ -141,7 +145,8 @@ int update (void)
          {
             shadow[y * B_COLS + x] = board[y * B_COLS + x];
             gotoxy (x * 2 + OFFSET, y);
-            printf ("\e[%dm  ", board[y * B_COLS + x]);
+            textbackground(board[y * B_COLS + x]);
+            printf ("  ");
          }
       }
    }
@@ -332,7 +337,7 @@ int main (int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused
          }
          else
          {
-            place (shape, pos, 7);
+            place (shape, pos, GREEN);
             ++points;
             for (j = 0; j < 252; j = B_COLS * (j / B_COLS + 1))
             {
@@ -405,7 +410,7 @@ int main (int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused
          sigprocmask (SIG_UNBLOCK, &set, NULL);
       }
 
-      place (shape, pos, 7);
+      place (shape, pos, GREEN);
       c = update ();
       place (shape, pos, 0);
    }
