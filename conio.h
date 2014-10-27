@@ -30,23 +30,25 @@
 #define HIDDEN       8
 
 /* Colors for text and background */
-#define BLACK        0x0
-#define RED          0x1
-#define GREEN        0x2
-#define BROWN        0x3
-#define BLUE         0x4
-#define MAGENTA      0x5
-#define CYAN         0x6
-#define LIGHTGREY    0x7
+#define RESETCOLOR      0x00
+#define BLACK           0x00
+#define RED             0x01
+#define GREEN           0x02
+#define YELLOW          0x03
+#define BLUE            0x04
+#define MAGENTA         0x05
+#define CYAN            0x06
+#define LIGHTGREY       0x07
 
-#define DARKGREY     0x10
-#define LIGHTRED     0x11
-#define LIGHTGREEN   0x12
-#define YELLOW       0x13
-#define LIGHTBLUE    0x14
-#define LIGHTMAGENTA 0x15
-#define LIGHTCYAN    0x16
-#define WHITE        0x17
+#define DARKGREY        0x10
+#define LIGHTBLACK      0x10
+#define LIGHTRED        0x11
+#define LIGHTGREEN      0x12
+#define LIGHTYELLOW     0x13
+#define LIGHTBLUE       0x14
+#define LIGHTMAGENTA    0x15
+#define LIGHTCYAN       0x16
+#define WHITE           0x17
 
 /* Esc[2JEsc[1;1H             - Clear screen and move cursor to 1,1 (upper left) pos. */
 #define clrscr()              puts ("\e[2J\e[1;1H")

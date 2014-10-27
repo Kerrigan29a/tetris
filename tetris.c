@@ -70,26 +70,26 @@ int board[B_SIZE], shadow[B_SIZE];
 int *peek_shape;                /* peek preview of next shape */
 int *shape;
 int shapes[] = {
-/* 00 */    7,  TL,  TC,  MR,   /* Z shape initial */
-/* 01 */    8,  TR,  TC,  ML,   /* S shape initial */
-/* 02 */    9,  ML,  MR,  BC,   /* T shape initial */
-/* 03 */    3,  TL,  TC,  ML,   /* O shape initial */
-/* 04 */   12,  ML,  BL,  MR,   /* L shape initial */
-/* 05 */   15,  ML,  BR,  MR,   /* J shape initial */
-/* 06 */   18,  ML,  MR,  EMR,  /* I shape initial */
+/* 00 */    7,  TL,  TC,  MR,   RED,        /* Z shape initial */
+/* 01 */    8,  TR,  TC,  ML,   GREEN,      /* S shape initial */
+/* 02 */    9,  ML,  MR,  BC,   YELLOW,     /* T shape initial */
+/* 03 */    3,  TL,  TC,  ML,   BLUE,       /* O shape initial */
+/* 04 */   12,  ML,  BL,  MR,   MAGENTA,    /* L shape initial */
+/* 05 */   15,  ML,  BR,  MR,   CYAN,       /* J shape initial */
+/* 06 */   18,  ML,  MR,  EMR,  LIGHTGREY,  /* I shape initial */
 
-/* 07 */    0,  TC,  ML,  BL,   /* Z shape */
-/* 08 */    1,  TC,  MR,  BR,   /* S shape */
-/* 09 */   10,  TC,  MR,  BC,   /* T shape */
-/* 10 */   11,  TC,  ML,  MR,   /* T shape */
-/* 11 */    2,  TC,  ML,  BC,   /* T shape */
-/* 12 */   13,  TC,  BC,  BR,   /* L shape */
-/* 13 */   14,  TR,  ML,  MR,   /* L shape */
-/* 14 */    4,  TL,  TC,  BC,   /* L shape */
-/* 15 */   16,  TR,  TC,  BC,   /* J shape */
-/* 16 */   17,  TL,  MR,  ML,   /* J shape */
-/* 17 */    5,  TC,  BC,  BL,   /* J shape */
-/* 18 */    6,  TC,  BC,  EBC,  /* I shape */
+/* 07 */    0,  TC,  ML,  BL,   RED,        /* Z shape */
+/* 08 */    1,  TC,  MR,  BR,   GREEN,      /* S shape */
+/* 09 */   10,  TC,  MR,  BC,   YELLOW,     /* T shape */
+/* 10 */   11,  TC,  ML,  MR,   YELLOW,     /* T shape */
+/* 11 */    2,  TC,  ML,  BC,   YELLOW,     /* T shape */
+/* 12 */   13,  TC,  BC,  BR,   MAGENTA,    /* L shape */
+/* 13 */   14,  TR,  ML,  MR,   MAGENTA,    /* L shape */
+/* 14 */    4,  TL,  TC,  BC,   MAGENTA,    /* L shape */
+/* 15 */   16,  TR,  TC,  BC,   CYAN,       /* J shape */
+/* 16 */   17,  TL,  MR,  ML,   CYAN,       /* J shape */
+/* 17 */    5,  TC,  BC,  BL,   CYAN,       /* J shape */
+/* 18 */    6,  TC,  BC,  EBC,  LIGHTGREY,  /* I shape */
 };
 
 void alarm_handler (int signal __attribute__ ((unused)))
@@ -116,10 +116,10 @@ int update (void)
 
    /* Display piece preview. */
    memset (preview, 0, sizeof(preview));
-   preview[2 * B_COLS + 1] = RED;
-   preview[2 * B_COLS + 1 + peek_shape[1]] = RED;
-   preview[2 * B_COLS + 1 + peek_shape[2]] = RED;
-   preview[2 * B_COLS + 1 + peek_shape[3]] = RED;
+   preview[2 * B_COLS + 1] = peek_shape[4];
+   preview[2 * B_COLS + 1 + peek_shape[1]] = peek_shape[4];
+   preview[2 * B_COLS + 1 + peek_shape[2]] = peek_shape[4];
+   preview[2 * B_COLS + 1 + peek_shape[3]] = peek_shape[4];
 
    for (y = 0; y < 4; y++)
    {
@@ -134,6 +134,7 @@ int update (void)
          }
       }
    }
+   textattr(RESETATTR);
 #endif
 
    /* Display board. */
@@ -150,6 +151,7 @@ int update (void)
          }
       }
    }
+   textattr(RESETATTR);
 
    /* Update points and level*/
    while (lines_cleared >= 10)
@@ -187,19 +189,20 @@ int fits_in (int *shape, int pos)
    return 1;
 }
 
-void place (int *shape, int pos, int b)
+void place (int *shape, int pos, int reset)
 {
-   board[pos] = b;
-   board[pos + shape[1]] = b;
-   board[pos + shape[2]] = b;
-   board[pos + shape[3]] = b;
+   unsigned char color = reset ? RESETCOLOR : shape[4];
+   board[pos] = color;
+   board[pos + shape[1]] = color;
+   board[pos + shape[2]] = color;
+   board[pos + shape[3]] = color;
 }
 
 int *next_shape (void)
 {
    int *next = peek_shape;
 
-   peek_shape = &shapes[rand () % 7 * 4];
+   peek_shape = &shapes[rand () % 7 * 5];
    if (!next)
    {
       return next_shape ();
@@ -300,7 +303,7 @@ int main (int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused
    ptr = board;
    for (i = B_SIZE; i; i--)
    {
-      *ptr++ = i < 25 || i % B_COLS < 2 ? 7 : 0;
+      *ptr++ = i < 25 || i % B_COLS < 2 ? DARKGREY : RESETCOLOR;
    }
 
    srand ((unsigned int)time (NULL));
@@ -337,7 +340,7 @@ int main (int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused
          }
          else
          {
-            place (shape, pos, GREEN);
+            place (shape, pos, 0);
             ++points;
             for (j = 0; j < 252; j = B_COLS * (j / B_COLS + 1))
             {
@@ -367,7 +370,7 @@ int main (int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused
       if (c == keys[KEY_ROTATE])
       {
          backup = shape;
-         shape = &shapes[4 * *shape]; /* Rotate */
+         shape = &shapes[5 * *shape]; /* Rotate */
          /* Check if it fits, if not restore shape from backup */
          if (!fits_in (shape, pos))
             shape = backup;
@@ -410,9 +413,9 @@ int main (int argc __attribute__ ((unused)), char *argv[] __attribute__ ((unused
          sigprocmask (SIG_UNBLOCK, &set, NULL);
       }
 
-      place (shape, pos, GREEN);
-      c = update ();
       place (shape, pos, 0);
+      c = update ();
+      place (shape, pos, 1);
    }
 
    if (tty_fix () == -1)
