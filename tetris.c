@@ -54,8 +54,10 @@ static int havemodes = 0;
 #define KEY_PAUSE  4
 #define KEY_QUIT   5
 
-#define HIGH_SCORE_FILE "/var/games/tetris.scores"
-#define TEMP_SCORE_FILE "/tmp/tetris-tmp.scores"
+#define HIGH_SCORE_FILE "./tetris.scores"
+#define TEMP_SCORE_FILE "./tetris-tmp.scores"
+
+#define OFFSET 1
 
 char *keys = DEFAULT_KEYS;
 int level = 1;
@@ -123,7 +125,7 @@ int update (void)
          if (preview[y * B_COLS + x] - shadow_preview[y * B_COLS + x])
          {
             shadow_preview[y * B_COLS + x] = preview[y * B_COLS + x];
-            gotoxy (x * 2 + 26 + 28, start + y);
+            gotoxy (x * 2 + 26 + OFFSET, start + y);
             printf ("\e[%dm  ", preview[y * B_COLS + x]);
          }
       }
@@ -138,7 +140,7 @@ int update (void)
          if (board[y * B_COLS + x] - shadow[y * B_COLS + x])
          {
             shadow[y * B_COLS + x] = board[y * B_COLS + x];
-            gotoxy (x * 2 + 28, y);
+            gotoxy (x * 2 + OFFSET, y);
             printf ("\e[%dm  ", board[y * B_COLS + x]);
          }
       }
@@ -154,16 +156,16 @@ int update (void)
 #ifdef ENABLE_SCORE
    /* Display current level and points */
    textattr(RESETATTR);
-   gotoxy (26 + 28, 2);
+   gotoxy (26 + OFFSET, 2);
    printf ("Level  : %d", level);
-   gotoxy (26 + 28, 3);
+   gotoxy (26 + OFFSET, 3);
    printf ("Points : %d", points);
 #endif
 #ifdef ENABLE_PREVIEW
-   gotoxy (26 + 28, 5);
+   gotoxy (26 + OFFSET, 5);
    printf ("Preview:");
 #endif
-   gotoxy (26 + 28, 10);
+   gotoxy (26 + OFFSET, 10);
    printf ("Keys:");
 
    return getchar ();
@@ -231,17 +233,17 @@ void show_online_help (void)
    const int start = 11;
 
    textattr(RESETATTR);
-   gotoxy (26 + 28, start);
+   gotoxy (26 + OFFSET, start);
    puts("j     - left");
-   gotoxy (26 + 28, start + 1);
+   gotoxy (26 + OFFSET, start + 1);
    puts("k     - rotate");
-   gotoxy (26 + 28, start + 2);
+   gotoxy (26 + OFFSET, start + 2);
    puts("l     - right");
-   gotoxy (26 + 28, start + 3);
+   gotoxy (26 + OFFSET, start + 3);
    puts("space - drop");
-   gotoxy (26 + 28, start + 4);
+   gotoxy (26 + OFFSET, start + 4);
    puts("p     - pause");
-   gotoxy (26 + 28, start + 5);
+   gotoxy (26 + OFFSET, start + 5);
    puts("q     - quit");
 }
 

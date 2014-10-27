@@ -5,10 +5,11 @@
 # Set CC and CFGLAGS in your local environment for a suitable
 # compiler (tcc?) and CFLAGS (-Os -W -Wall -Werror).
 
-VERSION        = 1.2.0
-CFG_OPTS      ?= -DENABLE_SCORE -DENABLE_PREVIEW -DENABLE_HIGH_SCORE
-CC            ?= @gcc
-CPPFLAGS      += $(CFG_OPTS)
+VERSION		= 1.2.0
+CFG_OPTS	?= -DENABLE_SCORE -DENABLE_PREVIEW -DENABLE_HIGH_SCORE
+#CC			?= @gcc
+CPPFLAGS	+= $(CFG_OPTS)
+CFLAGS		?= -Wall -Werror
 
 all: tetris
 
@@ -26,4 +27,3 @@ install: all
 
 dist:
 	@git archive --format=tar --prefix=tetris-$(VERSION)/ $(VERSION) | bzip2 >../tetris-$(VERSION).tar.bz2
-
