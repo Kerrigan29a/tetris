@@ -64,11 +64,13 @@
 #define showcursor()          puts ("\e[?25h")
 
 /* Esc[Value;...;Valuem       - Set Graphics Mode */
-#define __set_gm(attr,color,val)                                        \
-        if (!color)                                                     \
-                printf("\e[%dm", attr);                                 \
-        else                                                            \
-                printf("\e[%d;%dm", color & 0x10 ? 1 : 0, (color & 0xF) + val)
+#define __set_gm(attr, color, val) do {                                         \
+    if (!color) {                                                               \
+        printf("\e[%dm", attr);                                                 \
+    } else {                                                                    \
+        printf("\e[%d;%dm", (color) & 0x10 ? 1 : 0, ((color) & 0xF) + (val));   \
+    }                                                                           \
+} while(0)
 #define textattr(attr)        __set_gm(attr, 0, 0)
 #define textcolor(color)      __set_gm(RESETATTR, color, 30)
 #define textbackground(color) __set_gm(RESETATTR, color, 40)
