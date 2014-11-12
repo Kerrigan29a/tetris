@@ -69,6 +69,9 @@ int points = 0;
 int lines_cleared = 0;
 int board[B_SIZE], shadow[B_SIZE];
 
+#ifdef ENABLE_PREVIEW
+char reset_preview;
+#endif
 int *peek_shape;     /* peek preview of next shape */
 int *shape;
 int shapes[] = {
@@ -106,32 +109,39 @@ void alarm_handler(int signal __attribute__((unused)))
     setitimer(0, (struct itimerval *)h, 0);
 }
 
-int update(void)
+void update(void)
 {
     int x, y;
 #ifdef ENABLE_PREVIEW
-    const int start = 5;
-    int preview[B_COLS * 10];
-    int shadow_preview[B_COLS * 10];
+    if (reset_preview) {
+        const int start = 5;
+        int preview[B_COLS * 10];
+        int shadow_preview[B_COLS * 10];
 
-    /* Display piece preview. */
-    memset(preview, 0, sizeof(preview));
-    preview[2 * B_COLS + 1] = peek_shape[4];
-    preview[2 * B_COLS + 1 + peek_shape[1]] = peek_shape[4];
-    preview[2 * B_COLS + 1 + peek_shape[2]] = peek_shape[4];
-    preview[2 * B_COLS + 1 + peek_shape[3]] = peek_shape[4];
+        /* Display piece preview. */
+        memset(preview, 0, sizeof(preview));
+        preview[2 * B_COLS + 1] = peek_shape[4];
+        preview[2 * B_COLS + 1 + peek_shape[1]] = peek_shape[4];
+        preview[2 * B_COLS + 1 + peek_shape[2]] = peek_shape[4];
+        preview[2 * B_COLS + 1 + peek_shape[3]] = peek_shape[4];
 
-    for (y = 0; y < 4; y++) {
-        for (x = 0; x < B_COLS; x++) {
-            if (preview[y * B_COLS + x] - shadow_preview[y * B_COLS + x]) {
-                shadow_preview[y * B_COLS + x] = preview[y * B_COLS + x];
-                gotoxy(x * 2 + 26 + OFFSET, start + y);
-                textbackground(preview[y * B_COLS + x]);
-                printf("  ");
+        for (y = 0; y < 4; y++) {
+            textattr(RESETATTR);
+            gotoxy(26 + OFFSET, start + y);
+            clreol();
+            for (x = 0; x < B_COLS; x++) {
+                if (preview[y * B_COLS + x] - shadow_preview[y * B_COLS + x]) {
+                    shadow_preview[y * B_COLS + x] = preview[y * B_COLS + x];
+                    gotoxy(x * 2 + 26 + OFFSET, start + y);
+                    textbackground(preview[y * B_COLS + x]);
+                    printf("  ");
+                }
             }
         }
+        textattr(RESETATTR);
+
+        reset_preview = 0;
     }
-    textattr(RESETATTR);
 #endif
 
     /* Display board. */
@@ -166,8 +176,6 @@ int update(void)
 #endif
     gotoxy(26 + OFFSET, 10);
     printf("Keys:");
-
-    return getchar();
 }
 
 int fits_in(int *shape, int pos)
@@ -192,6 +200,9 @@ int *next_shape(void)
 {
     int *next = peek_shape;
 
+#ifdef ENABLE_PREVIEW
+    reset_preview = 1;
+#endif
     peek_shape = &shapes[rand() % 7 * 5];
     if (!next) {
         return next_shape();
@@ -325,9 +336,11 @@ int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
                             lines_cleared++;
 
                             for (; j % B_COLS; board[j--] = 0);
-                            c = update();
+                            update();
+                            c = getchar();
                             for (; --j; board[j + B_COLS] = board[j]);
-                            c = update();
+                            update();
+                            c = getchar();
                         }
                     }
                 }
@@ -376,7 +389,8 @@ int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
             sigprocmask(SIG_UNBLOCK, &set, NULL);
         }
         place(shape, pos, 0);
-        c = update();
+        update();
+        c = getchar();
         place(shape, pos, 1);
     }
 
