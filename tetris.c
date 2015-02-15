@@ -1,9 +1,9 @@
 /*
  * Micro Tetris, based on an obfuscated tetris, 1989 IOCCC Best Game
  *
- * Copyright (c) 1989  John Tromp <john.tromp@gmail.com>
+ * Copyright (c) 1989       John Tromp <john.tromp@gmail.com>
  * Copyright (c) 2009, 2010 Joachim Nilsson <joachim.nilsson@vmlinux.org>
- * Copyright (c) 2014 Kerrigan29a <kerrigan29a@gmail.com>
+ * Copyright (c) 2014, 2015 Kerrigan29a <kerrigan29a@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,9 @@
  * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  * OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
- *
+ */
+
+/*
  * See the following URLs for more information, first John Tromp's page about the
  * game http://homepages.cwi.nl/~tromp/tetris.html then there's the entry page
  * at IOCCC http://www.ioccc.org/1989/tromp.hint
@@ -61,7 +63,8 @@ static int havemodes = 0;
 #define HIGH_SCORE_FILE "./tetris.scores"
 #define TEMP_SCORE_FILE "./tetris-tmp.scores"
 
-#define OFFSET 1
+#define GLOBAL_OFFSET   1
+#define INFO_OFFSET     ((B_COLS + 1) * 2)
 
 char *keys = DEFAULT_KEYS;
 int level = 1;
@@ -75,26 +78,26 @@ char reset_preview;
 int *peek_shape;     /* peek preview of next shape */
 int *shape;
 int shapes[] = {
-     /* 00 */ 7, TL, TC, MR, RED,           /* Z shape initial */
-     /* 01 */ 8, TR, TC, ML, GREEN,         /* S shape initial */
-     /* 02 */ 9, ML, MR, BC, YELLOW,        /* T shape initial */
-     /* 03 */ 3, TL, TC, ML, BLUE,          /* O shape initial */
+     /* 00 */ 7,  TL, TC, MR, RED,          /* Z shape initial */
+     /* 01 */ 8,  TR, TC, ML, GREEN,        /* S shape initial */
+     /* 02 */ 9,  ML, MR, BC, YELLOW,       /* T shape initial */
+     /* 03 */ 3,  TL, TC, ML, BLUE,         /* O shape initial */
      /* 04 */ 12, ML, BL, MR, MAGENTA,      /* L shape initial */
      /* 05 */ 15, ML, BR, MR, CYAN,         /* J shape initial */
      /* 06 */ 18, ML, MR, EMR, LIGHTGREY,   /* I shape initial */
 
-     /* 07 */ 0, TC, ML, BL, RED,           /* Z shape */
-     /* 08 */ 1, TC, MR, BR, GREEN,         /* S shape */
+     /* 07 */ 0,  TC, ML, BL, RED,          /* Z shape */
+     /* 08 */ 1,  TC, MR, BR, GREEN,        /* S shape */
      /* 09 */ 10, TC, MR, BC, YELLOW,       /* T shape */
      /* 10 */ 11, TC, ML, MR, YELLOW,       /* T shape */
-     /* 11 */ 2, TC, ML, BC, YELLOW,        /* T shape */
+     /* 11 */ 2,  TC, ML, BC, YELLOW,       /* T shape */
      /* 12 */ 13, TC, BC, BR, MAGENTA,      /* L shape */
      /* 13 */ 14, TR, ML, MR, MAGENTA,      /* L shape */
-     /* 14 */ 4, TL, TC, BC, MAGENTA,       /* L shape */
+     /* 14 */ 4,  TL, TC, BC, MAGENTA,      /* L shape */
      /* 15 */ 16, TR, TC, BC, CYAN,         /* J shape */
      /* 16 */ 17, TL, MR, ML, CYAN,         /* J shape */
-     /* 17 */ 5, TC, BC, BL, CYAN,          /* J shape */
-     /* 18 */ 6, TC, BC, EBC, LIGHTGREY,    /* I shape */
+     /* 17 */ 5,  TC, BC, BL, CYAN,         /* J shape */
+     /* 18 */ 6,  TC, BC, EBC, LIGHTGREY,   /* I shape */
 };
 
 void alarm_handler(int signal __attribute__((unused)))
@@ -107,6 +110,51 @@ void alarm_handler(int signal __attribute__((unused)))
     }
     h[3] -= h[3] / (3000 - 10 * level);
     setitimer(0, (struct itimerval *)h, 0);
+}
+
+void paint(int x, int y, int color)
+{
+#ifdef ENABLE_UNICODE
+#ifdef ENABLE_PRETTY_BOARD
+    if (x == GLOBAL_OFFSET) {
+        textcolor(color);
+        if (y == (B_ROWS - 2)) {
+            printf(" ╚");
+        } else {
+            printf(" ║");
+        }
+    } else if (x == (B_COLS - 1) * 2 + GLOBAL_OFFSET) {
+        textcolor(color);
+        if (y == (B_ROWS - 2)) {
+            printf("╝ ");
+        } else {
+            printf("║ ");
+        }
+    } else if (y == (B_ROWS - 2)) {
+        textcolor(color);
+        printf("══");
+    } else if (color == RESETCOLOR) {
+#else /* ENABLE_PRETTY_BOARD */
+    if (
+        /* If no color */
+        (color == RESETCOLOR) ||
+        /* If position corresponds to the board limits */
+        (x == GLOBAL_OFFSET) ||
+        (x == (B_COLS - 1) * 2 + GLOBAL_OFFSET) ||
+        (y == (B_ROWS - 2))
+    ) {
+#endif /* ENABLE_PRETTY_BOARD */
+        textbackground(color);
+        printf("  ");
+    } else {
+        textcolor(color);
+        printf("▤");
+        //printf("▣");
+    }
+#else /* ENABLE_UNICODE */
+    textbackground(color);
+    printf("  ");
+#endif /* ENABLE_UNICODE */
 }
 
 void update(void)
@@ -127,14 +175,15 @@ void update(void)
 
         for (y = 0; y < 4; y++) {
             textattr(RESETATTR);
-            gotoxy(26 + OFFSET, start + y);
+            gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + y);
             clreol();
             for (x = 0; x < B_COLS; x++) {
                 if (preview[y * B_COLS + x] - shadow_preview[y * B_COLS + x]) {
+                    int real_x = x * 2 + INFO_OFFSET + GLOBAL_OFFSET;
+                    int real_y = start + y;
                     shadow_preview[y * B_COLS + x] = preview[y * B_COLS + x];
-                    gotoxy(x * 2 + 26 + OFFSET, start + y);
-                    textbackground(preview[y * B_COLS + x]);
-                    printf("  ");
+                    gotoxy(real_x, real_y);
+                    paint(real_x, real_y, preview[y * B_COLS + x]);
                 }
             }
         }
@@ -148,10 +197,11 @@ void update(void)
     for (y = 1; y < B_ROWS - 1; y++) {
         for (x = 0; x < B_COLS; x++) {
             if (board[y * B_COLS + x] - shadow[y * B_COLS + x]) {
+                int real_x = x * 2 + GLOBAL_OFFSET;
+                int real_y = y;
                 shadow[y * B_COLS + x] = board[y * B_COLS + x];
-                gotoxy(x * 2 + OFFSET, y);
-                textbackground(board[y * B_COLS + x]);
-                printf("  ");
+                gotoxy(real_x, real_y);
+                paint(real_x, real_y, board[y * B_COLS + x]);
             }
         }
     }
@@ -165,16 +215,16 @@ void update(void)
 
 #ifdef ENABLE_SCORE
     /* Display current level and points */
-    gotoxy(26 + OFFSET, 2);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 2);
     printf("Level  : %d", level);
-    gotoxy(26 + OFFSET, 3);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 3);
     printf("Points : %d", points);
 #endif
 #ifdef ENABLE_PREVIEW
-    gotoxy(26 + OFFSET, 5);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 5);
     printf("Preview:");
 #endif
-    gotoxy(26 + OFFSET, 10);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 10);
     printf("Keys:");
 }
 
@@ -240,17 +290,17 @@ void show_online_help(void)
     const int start = 11;
 
     textattr(RESETATTR);
-    gotoxy(26 + OFFSET, start);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start);
     puts("j     - left");
-    gotoxy(26 + OFFSET, start + 1);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 1);
     puts("k     - rotate");
-    gotoxy(26 + OFFSET, start + 2);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 2);
     puts("l     - right");
-    gotoxy(26 + OFFSET, start + 3);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 3);
     puts("space - drop");
-    gotoxy(26 + OFFSET, start + 4);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 4);
     puts("p     - pause");
-    gotoxy(26 + OFFSET, start + 5);
+    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 5);
     puts("q     - quit");
 }
 
@@ -298,7 +348,7 @@ int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
     /* Initialize board */
     ptr = board;
     for (i = B_SIZE; i; i--) {
-        *ptr++ = i < 25 || i % B_COLS < 2 ? DARKGREY : RESETCOLOR;
+        *ptr++ = i < 25 || i % B_COLS < 2 ? LIGHTGREY : RESETCOLOR;
     }
 
     srand((unsigned int)time(NULL));

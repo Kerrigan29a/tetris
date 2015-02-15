@@ -1,8 +1,8 @@
 /*
  * A conio.h like implementation for VTANSI displays.
  *
- * Copyright (c) 2009  Joachim Nilsson <joachim.nilsson@member.fsf.org>
- * Copyright (c) 2014 Kerrigan29a <kerrigan29a@gmail.com>
+ * Copyright (c) 2009, 2010 Joachim Nilsson <joachim.nilsson@vmlinux.org>
+ * Copyright (c) 2014, 2015 Kerrigan29a <kerrigan29a@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -70,7 +70,7 @@
     if (!color) {                                                               \
         printf("\e[%dm", attr);                                                 \
     } else {                                                                    \
-        printf("\e[%d;%dm", (color) & 0x10 ? 1 : 0, ((color) & 0xF) + (val));   \
+        printf("\e[%d;%dm", ((color) & 0x10) ? 1 : 0, ((color) & 0xF) + (val)); \
     }                                                                           \
 } while(0)
 #define textattr(attr)        __set_gm(attr, 0, 0)
