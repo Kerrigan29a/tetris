@@ -63,8 +63,8 @@ static int havemodes = 0;
 #define HIGH_SCORE_FILE "./tetris.scores"
 #define TEMP_SCORE_FILE "./tetris-tmp.scores"
 
-#define GLOBAL_OFFSET   1
-#define INFO_OFFSET     ((B_COLS + 1) * 2)
+#define GLOBAL_H_OFFSET 1
+#define INFO_H_OFFSET   ((B_COLS + 1) * 2)
 
 char *keys = DEFAULT_KEYS;
 int level = 1;
@@ -78,26 +78,26 @@ char reset_preview;
 int *peek_shape;     /* peek preview of next shape */
 int *shape;
 int shapes[] = {
-     /* 00 */ 7,  TL, TC, MR, RED,          /* Z shape initial */
-     /* 01 */ 8,  TR, TC, ML, GREEN,        /* S shape initial */
-     /* 02 */ 9,  ML, MR, BC, YELLOW,       /* T shape initial */
-     /* 03 */ 3,  TL, TC, ML, BLUE,         /* O shape initial */
+     /* 00 */  7, TL, TC, MR, RED,          /* Z shape initial */
+     /* 01 */  8, TR, TC, ML, GREEN,        /* S shape initial */
+     /* 02 */  9, ML, MR, BC, YELLOW,       /* T shape initial */
+     /* 03 */  3, TL, TC, ML, BLUE,         /* O shape initial */
      /* 04 */ 12, ML, BL, MR, MAGENTA,      /* L shape initial */
      /* 05 */ 15, ML, BR, MR, CYAN,         /* J shape initial */
      /* 06 */ 18, ML, MR, EMR, LIGHTGREY,   /* I shape initial */
 
-     /* 07 */ 0,  TC, ML, BL, RED,          /* Z shape */
-     /* 08 */ 1,  TC, MR, BR, GREEN,        /* S shape */
+     /* 07 */  0, TC, ML, BL, RED,          /* Z shape */
+     /* 08 */  1, TC, MR, BR, GREEN,        /* S shape */
      /* 09 */ 10, TC, MR, BC, YELLOW,       /* T shape */
      /* 10 */ 11, TC, ML, MR, YELLOW,       /* T shape */
-     /* 11 */ 2,  TC, ML, BC, YELLOW,       /* T shape */
+     /* 11 */  2, TC, ML, BC, YELLOW,       /* T shape */
      /* 12 */ 13, TC, BC, BR, MAGENTA,      /* L shape */
      /* 13 */ 14, TR, ML, MR, MAGENTA,      /* L shape */
-     /* 14 */ 4,  TL, TC, BC, MAGENTA,      /* L shape */
+     /* 14 */  4, TL, TC, BC, MAGENTA,      /* L shape */
      /* 15 */ 16, TR, TC, BC, CYAN,         /* J shape */
      /* 16 */ 17, TL, MR, ML, CYAN,         /* J shape */
-     /* 17 */ 5,  TC, BC, BL, CYAN,         /* J shape */
-     /* 18 */ 6,  TC, BC, EBC, LIGHTGREY,   /* I shape */
+     /* 17 */  5, TC, BC, BL, CYAN,         /* J shape */
+     /* 18 */  6, TC, BC, EBC, LIGHTGREY,   /* I shape */
 };
 
 void alarm_handler(int signal __attribute__((unused)))
@@ -115,15 +115,15 @@ void alarm_handler(int signal __attribute__((unused)))
 void paint(int x, int y, int color)
 {
 #ifdef ENABLE_UNICODE
-#ifdef ENABLE_PRETTY_BOARD
-    if (x == GLOBAL_OFFSET) {
+#ifdef ENABLE_UNICODE_BOARD
+    if (x == GLOBAL_H_OFFSET) {
         textcolor(color);
         if (y == (B_ROWS - 2)) {
             printf(" ╚");
         } else {
             printf(" ║");
         }
-    } else if (x == (B_COLS - 1) * 2 + GLOBAL_OFFSET) {
+    } else if (x == (B_COLS - 1) * 2 + GLOBAL_H_OFFSET) {
         textcolor(color);
         if (y == (B_ROWS - 2)) {
             printf("╝ ");
@@ -134,16 +134,16 @@ void paint(int x, int y, int color)
         textcolor(color);
         printf("══");
     } else if (color == RESETCOLOR) {
-#else /* ENABLE_PRETTY_BOARD */
+#else /* ENABLE_UNICODE_BOARD */
     if (
         /* If no color */
         (color == RESETCOLOR) ||
         /* If position corresponds to the board limits */
-        (x == GLOBAL_OFFSET) ||
-        (x == (B_COLS - 1) * 2 + GLOBAL_OFFSET) ||
+        (x == GLOBAL_H_OFFSET) ||
+        (x == (B_COLS - 1) * 2 + GLOBAL_H_OFFSET) ||
         (y == (B_ROWS - 2))
     ) {
-#endif /* ENABLE_PRETTY_BOARD */
+#endif /* ENABLE_UNICODE_BOARD */
         textbackground(color);
         printf("  ");
     } else {
@@ -175,11 +175,11 @@ void update(void)
 
         for (y = 0; y < 4; y++) {
             textattr(RESETATTR);
-            gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + y);
+            gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, start + y);
             clreol();
             for (x = 0; x < B_COLS; x++) {
                 if (preview[y * B_COLS + x] - shadow_preview[y * B_COLS + x]) {
-                    int real_x = x * 2 + INFO_OFFSET + GLOBAL_OFFSET;
+                    int real_x = x * 2 + INFO_H_OFFSET + GLOBAL_H_OFFSET;
                     int real_y = start + y;
                     shadow_preview[y * B_COLS + x] = preview[y * B_COLS + x];
                     gotoxy(real_x, real_y);
@@ -197,7 +197,7 @@ void update(void)
     for (y = 1; y < B_ROWS - 1; y++) {
         for (x = 0; x < B_COLS; x++) {
             if (board[y * B_COLS + x] - shadow[y * B_COLS + x]) {
-                int real_x = x * 2 + GLOBAL_OFFSET;
+                int real_x = x * 2 + GLOBAL_H_OFFSET;
                 int real_y = y;
                 shadow[y * B_COLS + x] = board[y * B_COLS + x];
                 gotoxy(real_x, real_y);
@@ -215,16 +215,16 @@ void update(void)
 
 #ifdef ENABLE_SCORE
     /* Display current level and points */
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 2);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, 2);
     printf("Level  : %d", level);
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 3);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, 3);
     printf("Points : %d", points);
 #endif
 #ifdef ENABLE_PREVIEW
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 5);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, 5);
     printf("Preview:");
 #endif
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, 10);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, 10);
     printf("Keys:");
 }
 
@@ -290,17 +290,17 @@ void show_online_help(void)
     const int start = 11;
 
     textattr(RESETATTR);
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, start);
     puts("j     - left");
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 1);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, start + 1);
     puts("k     - rotate");
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 2);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, start + 2);
     puts("l     - right");
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 3);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, start + 3);
     puts("space - drop");
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 4);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, start + 4);
     puts("p     - pause");
-    gotoxy(INFO_OFFSET + GLOBAL_OFFSET, start + 5);
+    gotoxy(INFO_H_OFFSET + GLOBAL_H_OFFSET, start + 5);
     puts("q     - quit");
 }
 
