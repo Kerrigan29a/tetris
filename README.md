@@ -18,9 +18,9 @@ make
 
 ## Keyboard Control
 
->    j         - Left
->    k         - Rotate
->    l         - Right
->    <SPACE>   - Drop
->    p         - Pause
->    q         - Quit
+- j         - Left
+- k         - Rotate
+- l         - Right
+- <SPACE>   - Drop
+- p         - Pause
+- q         - Quit
