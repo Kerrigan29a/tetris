@@ -21,6 +21,6 @@ make
 - j         - Left
 - k         - Rotate
 - l         - Right
-- <SPACE>   - Drop
+- SPACE     - Drop
 - p         - Pause
 - q         - Quit
